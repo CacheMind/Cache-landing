@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cache — Save anything. Your AI remembers it.</title>
+  <meta name="description" content="Cache is a memory layer for AI. Save articles, tweets, videos, PDFs — and every AI you use automatically knows what you've read.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --border: #222;
+      --text: #f0f0f0;
+      --muted: #888;
+      --accent: #3b82f6;
+      --accent-dim: rgba(59, 130, 246, 0.15);
+      --green: #22c55e;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Nav */
+    nav {
+      position: fixed; top: 0; width: 100%; z-index: 100;
+      background: rgba(10, 10, 10, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+    }
+    .nav-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .logo { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px; }
+    .logo span { color: var(--accent); }
+    .nav-cta {
+      background: var(--accent); color: #fff; border: none; padding: 8px 20px;
+      border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer;
+      text-decoration: none; transition: opacity 0.2s;
+    }
+    .nav-cta:hover { opacity: 0.9; }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      text-align: center; padding: 120px 2rem 80px;
+    }
+    .hero-inner { max-width: 720px; }
+    .badge {
+      display: inline-block; background: var(--accent-dim); color: var(--accent);
+      padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+      margin-bottom: 1.5rem; letter-spacing: 0.5px;
+    }
+    h1 {
+      font-size: clamp(2.4rem, 5vw, 3.8rem); font-weight: 800;
+      line-height: 1.1; letter-spacing: -1.5px; margin-bottom: 1.5rem;
+    }
+    h1 .highlight { color: var(--accent); }
+    .subtitle {
+      font-size: 1.2rem; color: var(--muted); max-width: 540px;
+      margin: 0 auto 2.5rem; line-height: 1.7;
+    }
+    .hero-cta {
+      display: inline-block; background: var(--accent); color: #fff;
+      padding: 14px 36px; border-radius: 10px; font-weight: 700;
+      font-size: 1.05rem; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .hero-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(59,130,246,0.3); }
+    .hero-sub {
+      margin-top: 1rem; font-size: 0.85rem; color: var(--muted);
+    }
+
+    /* How it works */
+    .section { padding: 100px 2rem; }
+    .section-inner { max-width: 1000px; margin: 0 auto; }
+    .section-title {
+      text-align: center; font-size: 2rem; font-weight: 800;
+      letter-spacing: -1px; margin-bottom: 1rem;
+    }
+    .section-subtitle {
+      text-align: center; color: var(--muted); font-size: 1.05rem;
+      max-width: 600px; margin: 0 auto 3.5rem;
+    }
+
+    /* Steps */
+    .steps {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;
+    }
+    .step {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem;
+      transition: border-color 0.3s;
+    }
+    .step:hover { border-color: var(--accent); }
+    .step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--accent-dim); color: var(--accent);
+      font-weight: 800; font-size: 0.95rem; margin-bottom: 1.2rem;
+    }
+    .step h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.6rem; }
+    .step p { color: var(--muted); font-size: 0.95rem; line-height: 1.6; }
+
+    /* Wow moment */
+    .wow {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2.5rem; margin-top: 3rem;
+      max-width: 700px; margin-left: auto; margin-right: auto;
+    }
+    .wow-label {
+      font-size: 0.75rem; font-weight: 700; color: var(--accent);
+      text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 1rem;
+    }
+    .wow p { color: var(--muted); font-size: 0.95rem; line-height: 1.8; }
+    .wow strong { color: var(--text); }
+
+    /* Competitors */
+    .compare-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;
+    }
+    .compare-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.8rem;
+    }
+    .compare-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .compare-card .tag {
+      display: inline-block; font-size: 0.7rem; font-weight: 700;
+      padding: 3px 10px; border-radius: 6px; margin-bottom: 0.8rem;
+    }
+    .tag-them { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .tag-us { background: rgba(34,197,94,0.15); color: var(--green); }
+    .compare-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+
+    /* CTA */
+    .cta-section {
+      text-align: center; padding: 100px 2rem;
+      background: linear-gradient(180deg, var(--bg) 0%, #0d1117 100%);
+    }
+    .cta-section h2 {
+      font-size: 2.2rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 1rem;
+    }
+    .cta-section p { color: var(--muted); margin-bottom: 2rem; font-size: 1.05rem; }
+
+    /* Footer */
+    footer {
+      text-align: center; padding: 2rem; border-top: 1px solid var(--border);
+      color: var(--muted); font-size: 0.85rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .steps { grid-template-columns: 1fr; }
+      .compare-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <div class="logo"><span>Cache</span></div>
+      <a class="nav-cta" href="#waitlist">Join Waitlist</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="badge">🧠 YOUR SECOND BRAIN FOR AI</div>
+      <h1>Save anything.<br><span class="highlight">Your AI remembers it.</span></h1>
+      <p class="subtitle">
+        Articles, tweets, videos, PDFs — save what matters from anywhere.
+        When you talk to ChatGPT, Claude, or Cursor, Cache silently gives your AI the context it needs.
+      </p>
+      <a class="hero-cta" href="#waitlist">Join the Waitlist →</a>
+      <p class="hero-sub">Free Chrome extension · Launching soon</p>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="section">
+    <div class="section-inner">
+      <h2 class="section-title">How it works</h2>
+      <p class="section-subtitle">Three steps. No manual organization. No copy-pasting into AI chats.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Save anything</h3>
+          <p>One click or keyboard shortcut. Articles, threads, PDFs, selections, videos. From any website, any app.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>Cache processes it</h3>
+          <p>Automatic summarization, key-point extraction, and semantic embedding. No folders, no tags, no organizing.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Your AI just knows</h3>
+          <p>When you ask ChatGPT or Claude anything, Cache finds the relevant saved content and injects it automatically. You never copy-paste again.</p>
+        </div>
+      </div>
+
+      <div class="wow">
+        <div class="wow-label">✦ The wow moment</div>
+        <p>
+          <strong>Tuesday:</strong> You save a Stratechery article on AI commoditization.<br>
+          <strong>Friday:</strong> You ask Claude "help me draft a board update on our AI strategy."<br>
+          <strong>Claude responds with the Stratechery thesis, citing it correctly.</strong><br><br>
+          You never mentioned the article. Cache silently retrieved and injected it.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why not X -->
+  <section class="section" style="background: var(--surface);">
+    <div class="section-inner">
+      <h2 class="section-title">Why existing tools fail</h2>
+      <p class="section-subtitle">Everyone solves one piece. Nobody connects them all.</p>
+
+      <div class="compare-grid">
+        <div class="compare-card">
+          <h3>Readwise / Pocket</h3>
+          <span class="tag tag-them">Reading tool, not AI layer</span>
+          <p>Great for saving and highlighting. But your highlights never reach ChatGPT or Claude. Save and forget.</p>
+        </div>
+        <div class="compare-card">
+          <h3>ChatGPT Memory</h3>
+          <span class="tag tag-them">Siloed to one platform</span>
+          <p>ChatGPT remembers your chats — but knows nothing about what you read on the web, and none of it transfers to Claude or Cursor.</p>
+        </div>
+        <div class="compare-card">
+          <h3>Notion AI / Mem.ai</h3>
+          <span class="tag tag-them">Requires manual organization</span>
+          <p>You have to dump, tag, and structure everything yourself. Most people's Notion is a graveyard of unsorted pages.</p>
+        </div>
+        <div class="compare-card">
+          <h3>Cache</h3>
+          <span class="tag tag-us">Capture → Retrieve → Inject</span>
+          <p>Vendor-neutral. Capture from any source. Auto-retrieve when relevant. Inject into any AI. No manual work.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Waitlist CTA -->
+  <section class="cta-section" id="waitlist">
+    <h2>Stop losing what you read.</h2>
+    <p>Join the waitlist for early access to Cache.</p>
+    <a class="hero-cta" href="mailto:akshay.ratnawat@gmail.com?subject=Cache%20Waitlist&body=I%20want%20early%20access%20to%20Cache!">Request Early Access →</a>
+    <p class="hero-sub" style="margin-top: 1rem;">Or email us: akshay.ratnawat@gmail.com</p>
+  </section>
+
+  <footer>
+    <p>© 2026 Cache · Built by <a href="https://github.com/akshayratnawat" style="color: var(--accent); text-decoration: none;">Akshay Ratnawat</a></p>
+  </footer>
+
+</body>
+</html>
