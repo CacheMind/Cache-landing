@@ -5,266 +5,656 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cache — Save anything. Your AI remembers it.</title>
   <meta name="description" content="Cache is a memory layer for AI. Save articles, tweets, videos, PDFs — and every AI you use automatically knows what you've read.">
+  <meta property="og:title" content="Cache — Save anything. Your AI remembers it.">
+  <meta property="og:description" content="Your second brain that talks to your AI.">
+  <meta property="og:type" content="website">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --bg: #0a0a0a;
-      --surface: #141414;
-      --border: #222;
-      --text: #f0f0f0;
-      --muted: #888;
+      --bg: #09090b;
+      --surface: #111113;
+      --surface-2: #18181b;
+      --border: #27272a;
+      --border-light: #3f3f46;
+      --text: #fafafa;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
       --accent: #3b82f6;
-      --accent-dim: rgba(59, 130, 246, 0.15);
+      --accent-glow: rgba(59, 130, 246, 0.15);
+      --accent-glow-strong: rgba(59, 130, 246, 0.25);
       --green: #22c55e;
+      --red: #ef4444;
+      --radius: 16px;
     }
 
+    html { scroll-behavior: smooth; }
+
     body {
-      font-family: 'Inter', -apple-system, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
     }
 
-    /* Nav */
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes glow {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .fade-up {
+      opacity: 0; transform: translateY(30px);
+      animation: fadeUp 0.8s ease-out forwards;
+    }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+    .delay-5 { animation-delay: 0.5s; }
+
+    /* ── Nav ── */
     nav {
       position: fixed; top: 0; width: 100%; z-index: 100;
-      background: rgba(10, 10, 10, 0.85);
-      backdrop-filter: blur(12px);
+      background: rgba(9, 9, 11, 0.8);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
-      padding: 0 2rem;
     }
     .nav-inner {
-      max-width: 1100px; margin: 0 auto;
+      max-width: 1200px; margin: 0 auto; padding: 0 2rem;
       display: flex; align-items: center; justify-content: space-between;
-      height: 60px;
+      height: 64px;
     }
-    .logo { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px; }
-    .logo span { color: var(--accent); }
-    .nav-cta {
-      background: var(--accent); color: #fff; border: none; padding: 8px 20px;
-      border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer;
-      text-decoration: none; transition: opacity 0.2s;
+    .logo {
+      font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px;
+      display: flex; align-items: center; gap: 8px;
     }
-    .nav-cta:hover { opacity: 0.9; }
+    .logo-icon {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .nav-links { display: flex; align-items: center; gap: 2rem; }
+    .nav-links a {
+      color: var(--text-secondary); text-decoration: none;
+      font-size: 0.875rem; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .btn-primary {
+      background: var(--accent); color: #fff; border: none;
+      padding: 9px 20px; border-radius: 10px; font-weight: 600;
+      font-size: 0.875rem; cursor: pointer; text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover {
+      background: #2563eb;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .btn-secondary {
+      background: transparent; color: var(--text); border: 1px solid var(--border);
+      padding: 9px 20px; border-radius: 10px; font-weight: 600;
+      font-size: 0.875rem; cursor: pointer; text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--border-light); background: var(--surface); }
 
-    /* Hero */
+    /* ── Hero ── */
     .hero {
-      min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      text-align: center; padding: 120px 2rem 80px;
+      min-height: 100vh; display: flex; align-items: center;
+      justify-content: center; text-align: center;
+      padding: 140px 2rem 80px;
+      position: relative;
     }
-    .hero-inner { max-width: 720px; }
+    .hero::before {
+      content: ''; position: absolute;
+      top: 0; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 600px;
+      background: radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+    .hero-inner { max-width: 800px; position: relative; z-index: 1; }
     .badge {
-      display: inline-block; background: var(--accent-dim); color: var(--accent);
-      padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
-      margin-bottom: 1.5rem; letter-spacing: 0.5px;
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent-glow); border: 1px solid rgba(59,130,246,0.2);
+      color: var(--accent); padding: 7px 18px; border-radius: 100px;
+      font-size: 0.8rem; font-weight: 600; margin-bottom: 2rem;
+      letter-spacing: 0.3px;
+    }
+    .badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent); animation: glow 2s ease-in-out infinite;
     }
     h1 {
-      font-size: clamp(2.4rem, 5vw, 3.8rem); font-weight: 800;
-      line-height: 1.1; letter-spacing: -1.5px; margin-bottom: 1.5rem;
+      font-size: clamp(3rem, 6vw, 4.5rem); font-weight: 900;
+      line-height: 1.05; letter-spacing: -2.5px; margin-bottom: 1.5rem;
     }
-    h1 .highlight { color: var(--accent); }
-    .subtitle {
-      font-size: 1.2rem; color: var(--muted); max-width: 540px;
-      margin: 0 auto 2.5rem; line-height: 1.7;
+    .gradient-text {
+      background: linear-gradient(135deg, #fff 0%, #3b82f6 50%, #8b5cf6 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
-    .hero-cta {
-      display: inline-block; background: var(--accent); color: #fff;
-      padding: 14px 36px; border-radius: 10px; font-weight: 700;
-      font-size: 1.05rem; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s;
+    .hero-subtitle {
+      font-size: 1.2rem; color: var(--text-secondary);
+      max-width: 560px; margin: 0 auto 2.5rem; line-height: 1.8;
     }
-    .hero-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(59,130,246,0.3); }
-    .hero-sub {
-      margin-top: 1rem; font-size: 0.85rem; color: var(--muted);
+    .hero-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .hero-buttons .btn-primary { padding: 14px 32px; font-size: 1rem; }
+    .hero-buttons .btn-secondary { padding: 14px 32px; font-size: 1rem; }
+    .hero-note {
+      margin-top: 1.5rem; font-size: 0.8rem; color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center; gap: 6px;
     }
 
-    /* How it works */
-    .section { padding: 100px 2rem; }
-    .section-inner { max-width: 1000px; margin: 0 auto; }
+    /* ── Demo Section ── */
+    .demo-section {
+      padding: 0 2rem 120px; position: relative;
+    }
+    .demo-container {
+      max-width: 960px; margin: 0 auto;
+      border-radius: 20px; overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      position: relative;
+    }
+    .demo-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+    }
+    .demo-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+    }
+    .demo-dot.red { background: #ef4444; }
+    .demo-dot.yellow { background: #eab308; }
+    .demo-dot.green { background: #22c55e; }
+    .demo-placeholder {
+      aspect-ratio: 16/9; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
+      color: var(--text-muted); gap: 1rem;
+    }
+    .demo-placeholder svg { opacity: 0.4; }
+    .demo-placeholder p { font-size: 0.9rem; }
+    .demo-placeholder video,
+    .demo-placeholder img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+
+    /* ── Section shared ── */
+    .section { padding: 120px 2rem; }
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 2px; color: var(--accent); margin-bottom: 1rem;
+      text-align: center;
+    }
     .section-title {
-      text-align: center; font-size: 2rem; font-weight: 800;
-      letter-spacing: -1px; margin-bottom: 1rem;
+      text-align: center; font-size: clamp(2rem, 4vw, 2.8rem);
+      font-weight: 800; letter-spacing: -1.5px; margin-bottom: 1rem;
+      line-height: 1.15;
     }
     .section-subtitle {
-      text-align: center; color: var(--muted); font-size: 1.05rem;
-      max-width: 600px; margin: 0 auto 3.5rem;
+      text-align: center; color: var(--text-secondary); font-size: 1.1rem;
+      max-width: 600px; margin: 0 auto 4rem; line-height: 1.7;
     }
 
-    /* Steps */
-    .steps {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;
+    /* ── Problem ── */
+    .problem-section { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .problem-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
     }
-    .step {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 2rem;
+    .problem-card {
+      padding: 2rem; border-radius: var(--radius);
+      background: var(--bg); border: 1px solid var(--border);
       transition: border-color 0.3s;
     }
-    .step:hover { border-color: var(--accent); }
+    .problem-card:hover { border-color: var(--border-light); }
+    .problem-icon {
+      font-size: 2rem; margin-bottom: 1rem;
+      width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;
+      background: var(--surface-2); border-radius: 14px; border: 1px solid var(--border);
+    }
+    .problem-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .problem-card p { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; }
+
+    /* ── How it works ── */
+    .steps-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+      position: relative;
+    }
+    .step {
+      padding: 2.5rem; text-align: center;
+      position: relative;
+    }
+    .step:not(:last-child)::after {
+      content: '→'; position: absolute; right: -12px; top: 50%;
+      transform: translateY(-50%); color: var(--text-muted);
+      font-size: 1.5rem; z-index: 1;
+    }
     .step-num {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 36px; height: 36px; border-radius: 10px;
-      background: var(--accent-dim); color: var(--accent);
-      font-weight: 800; font-size: 0.95rem; margin-bottom: 1.2rem;
+      width: 48px; height: 48px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent-glow-strong), var(--accent-glow));
+      border: 1px solid rgba(59,130,246,0.3);
+      color: var(--accent); font-weight: 800; font-size: 1.1rem;
+      margin-bottom: 1.5rem;
     }
     .step h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.6rem; }
-    .step p { color: var(--muted); font-size: 0.95rem; line-height: 1.6; }
+    .step p { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.7; }
 
-    /* Wow moment */
-    .wow {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 2.5rem; margin-top: 3rem;
-      max-width: 700px; margin-left: auto; margin-right: auto;
+    /* ── Wow moment ── */
+    .wow-section { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--surface); }
+    .wow-card {
+      max-width: 720px; margin: 0 auto;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 3rem;
+      position: relative; overflow: hidden;
     }
-    .wow-label {
-      font-size: 0.75rem; font-weight: 700; color: var(--accent);
-      text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 1rem;
+    .wow-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
     }
-    .wow p { color: var(--muted); font-size: 0.95rem; line-height: 1.8; }
-    .wow strong { color: var(--text); }
-
-    /* Competitors */
-    .compare-grid {
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;
+    .wow-timeline { list-style: none; }
+    .wow-timeline li {
+      padding: 0.8rem 0 0.8rem 2rem; position: relative;
+      color: var(--text-secondary); font-size: 0.95rem; line-height: 1.7;
     }
-    .compare-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 14px; padding: 1.8rem;
+    .wow-timeline li::before {
+      content: ''; position: absolute; left: 0; top: 1.15rem;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--border-light);
     }
-    .compare-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .compare-card .tag {
+    .wow-timeline li:last-child::before { background: var(--accent); box-shadow: 0 0 10px var(--accent-glow-strong); }
+    .wow-timeline li:last-child { color: var(--text); font-weight: 600; }
+    .wow-timeline .day {
       display: inline-block; font-size: 0.7rem; font-weight: 700;
-      padding: 3px 10px; border-radius: 6px; margin-bottom: 0.8rem;
+      text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted);
+      margin-bottom: 2px; display: block;
     }
-    .tag-them { background: rgba(239,68,68,0.15); color: #ef4444; }
-    .tag-us { background: rgba(34,197,94,0.15); color: var(--green); }
-    .compare-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
 
-    /* CTA */
+    /* ── Integrations ── */
+    .integrations-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 3rem; flex-wrap: wrap;
+    }
+    .integration {
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      color: var(--text-muted); font-size: 0.8rem; font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .integration-icon {
+      width: 64px; height: 64px; border-radius: 16px;
+      background: var(--surface); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem; transition: all 0.3s;
+    }
+    .integration:hover .integration-icon {
+      border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    /* ── Comparison ── */
+    .compare-section { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .compare-table {
+      max-width: 800px; margin: 0 auto;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .compare-row {
+      display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+      border-bottom: 1px solid var(--border);
+    }
+    .compare-row:last-child { border-bottom: none; }
+    .compare-row.header {
+      background: var(--bg); font-weight: 700; font-size: 0.8rem;
+      text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);
+    }
+    .compare-row.highlight { background: rgba(59,130,246,0.05); }
+    .compare-cell {
+      padding: 14px 16px; font-size: 0.85rem; color: var(--text-secondary);
+      display: flex; align-items: center;
+    }
+    .compare-cell:first-child { font-weight: 600; color: var(--text); }
+    .compare-row.highlight .compare-cell:first-child { color: var(--accent); }
+    .check { color: var(--green); font-weight: 700; }
+    .cross { color: var(--red); opacity: 0.6; }
+
+    /* ── Open Source ── */
+    .oss-card {
+      max-width: 700px; margin: 0 auto; text-align: center;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 3rem;
+    }
+    .oss-card h3 { font-size: 1.3rem; font-weight: 800; margin-bottom: 0.8rem; }
+    .oss-card p { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 2rem; line-height: 1.7; }
+    .oss-badges { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .oss-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--bg); border: 1px solid var(--border);
+      padding: 10px 20px; border-radius: 10px;
+      font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);
+      text-decoration: none; transition: all 0.2s;
+    }
+    .oss-badge:hover { border-color: var(--accent); color: var(--text); }
+
+    /* ── CTA ── */
     .cta-section {
-      text-align: center; padding: 100px 2rem;
-      background: linear-gradient(180deg, var(--bg) 0%, #0d1117 100%);
+      padding: 140px 2rem; text-align: center; position: relative;
     }
-    .cta-section h2 {
-      font-size: 2.2rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 1rem;
+    .cta-section::before {
+      content: ''; position: absolute;
+      bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 400px;
+      background: radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
     }
-    .cta-section p { color: var(--muted); margin-bottom: 2rem; font-size: 1.05rem; }
+    .cta-inner { position: relative; z-index: 1; }
+    .cta-inner h2 {
+      font-size: clamp(2rem, 4vw, 3rem); font-weight: 900;
+      letter-spacing: -1.5px; margin-bottom: 1rem;
+    }
+    .cta-inner p { color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 2.5rem; }
 
-    /* Footer */
+    /* ── Footer ── */
     footer {
-      text-align: center; padding: 2rem; border-top: 1px solid var(--border);
-      color: var(--muted); font-size: 0.85rem;
+      padding: 2rem; text-align: center;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted); font-size: 0.8rem;
     }
+    footer a { color: var(--accent); text-decoration: none; }
 
-    /* Responsive */
+    /* ── Responsive ── */
     @media (max-width: 768px) {
-      .steps { grid-template-columns: 1fr; }
-      .compare-grid { grid-template-columns: 1fr; }
+      .problem-grid { grid-template-columns: 1fr; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .step:not(:last-child)::after { display: none; }
+      .compare-row { grid-template-columns: 1fr; }
+      .compare-row.header { display: none; }
+      .compare-cell { padding: 10px 16px; }
+      .compare-cell:first-child { padding-top: 14px; }
+      .integrations-row { gap: 2rem; }
+      .nav-links { display: none; }
+      .hero-buttons { flex-direction: column; align-items: center; }
     }
   </style>
 </head>
 <body>
 
+  <!-- ── Nav ── -->
   <nav>
     <div class="nav-inner">
-      <div class="logo"><span>Cache</span></div>
-      <a class="nav-cta" href="#waitlist">Join Waitlist</a>
+      <div class="logo">
+        <div class="logo-icon">⚡</div>
+        Cache
+      </div>
+      <div class="nav-links">
+        <a href="#how">How it works</a>
+        <a href="#compare">Compare</a>
+        <a href="https://github.com/CacheMind" target="_blank">GitHub</a>
+        <a class="btn-primary" href="#waitlist">Join Waitlist</a>
+      </div>
     </div>
   </nav>
 
-  <!-- Hero -->
+  <!-- ── Hero ── -->
   <section class="hero">
     <div class="hero-inner">
-      <div class="badge">🧠 YOUR SECOND BRAIN FOR AI</div>
-      <h1>Save anything.<br><span class="highlight">Your AI remembers it.</span></h1>
-      <p class="subtitle">
-        Articles, tweets, videos, PDFs — save what matters from anywhere.
-        When you talk to ChatGPT, Claude, or Cursor, Cache silently gives your AI the context it needs.
+      <div class="badge fade-up">
+        <span class="badge-dot"></span>
+        Now in private beta
+      </div>
+      <h1 class="fade-up delay-1">
+        Save anything.<br>
+        <span class="gradient-text">Your AI remembers it.</span>
+      </h1>
+      <p class="hero-subtitle fade-up delay-2">
+        Articles, tweets, videos, PDFs — save what you find valuable.
+        When you talk to ChatGPT, Claude, or Cursor,
+        Cache silently gives your AI the context it needs.
       </p>
-      <a class="hero-cta" href="#waitlist">Join the Waitlist →</a>
-      <p class="hero-sub">Free Chrome extension · Launching soon</p>
+      <div class="hero-buttons fade-up delay-3">
+        <a class="btn-primary" href="#waitlist">Join the Waitlist →</a>
+        <a class="btn-secondary" href="https://github.com/CacheMind" target="_blank">⭐ Star on GitHub</a>
+      </div>
+      <p class="hero-note fade-up delay-4">
+        <span>🔒</span> Open source · Self-hostable · Your data stays yours
+      </p>
     </div>
   </section>
 
-  <!-- How it works -->
-  <section class="section">
-    <div class="section-inner">
-      <h2 class="section-title">How it works</h2>
-      <p class="section-subtitle">Three steps. No manual organization. No copy-pasting into AI chats.</p>
+  <!-- ── Demo ── -->
+  <section class="demo-section fade-up delay-5">
+    <div class="demo-container">
+      <div class="demo-header">
+        <div class="demo-dot red"></div>
+        <div class="demo-dot yellow"></div>
+        <div class="demo-dot green"></div>
+      </div>
+      <div class="demo-placeholder">
+        <!-- Replace this block with: <video src="demo.mp4" autoplay loop muted playsinline></video> -->
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        <p>Product demo coming soon</p>
+      </div>
+    </div>
+  </section>
 
-      <div class="steps">
+  <!-- ── Problem ── -->
+  <section class="section problem-section">
+    <div class="section-inner">
+      <div class="section-label">The problem</div>
+      <h2 class="section-title">Your AI is an amnesiac</h2>
+      <p class="section-subtitle">
+        You consume brilliant content all day. When you talk to AI, none of it is there.
+      </p>
+      <div class="problem-grid">
+        <div class="problem-card">
+          <div class="problem-icon">📋</div>
+          <h3>Copy-paste hell</h3>
+          <p>Found a great article? To use it with AI, you manually copy text, switch tabs, paste it in. Every. Single. Time.</p>
+        </div>
+        <div class="problem-card">
+          <div class="problem-icon">🧠</div>
+          <h3>"There was this article…"</h3>
+          <p>You vaguely remember a framework you read last week. You try to describe it to Claude. The response is vague too.</p>
+        </div>
+        <div class="problem-card">
+          <div class="problem-icon">🤖</div>
+          <h3>Generic AI answers</h3>
+          <p>Your AI doesn't know what you've read, saved, or care about. So it gives the same answer it gives everyone.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── How it works ── -->
+  <section class="section" id="how">
+    <div class="section-inner">
+      <div class="section-label">How it works</div>
+      <h2 class="section-title">Three steps. Zero friction.</h2>
+      <p class="section-subtitle">No folders. No tags. No organizing. Just save and forget — Cache handles the rest.</p>
+      <div class="steps-grid">
         <div class="step">
           <div class="step-num">1</div>
           <h3>Save anything</h3>
-          <p>One click or keyboard shortcut. Articles, threads, PDFs, selections, videos. From any website, any app.</p>
+          <p>One click or <code style="background:var(--surface-2);padding:2px 8px;border-radius:6px;font-size:0.8rem;">⌘+Shift+S</code> from any website. Articles, threads, PDFs, selections, videos.</p>
         </div>
         <div class="step">
           <div class="step-num">2</div>
           <h3>Cache processes it</h3>
-          <p>Automatic summarization, key-point extraction, and semantic embedding. No folders, no tags, no organizing.</p>
+          <p>Automatic summarization, key-point extraction, and semantic embedding. Happens in seconds, silently.</p>
         </div>
         <div class="step">
           <div class="step-num">3</div>
           <h3>Your AI just knows</h3>
-          <p>When you ask ChatGPT or Claude anything, Cache finds the relevant saved content and injects it automatically. You never copy-paste again.</p>
+          <p>Ask ChatGPT or Claude anything. Cache finds relevant saved content and injects it. You never copy-paste again.</p>
         </div>
-      </div>
-
-      <div class="wow">
-        <div class="wow-label">✦ The wow moment</div>
-        <p>
-          <strong>Tuesday:</strong> You save a Stratechery article on AI commoditization.<br>
-          <strong>Friday:</strong> You ask Claude "help me draft a board update on our AI strategy."<br>
-          <strong>Claude responds with the Stratechery thesis, citing it correctly.</strong><br><br>
-          You never mentioned the article. Cache silently retrieved and injected it.
-        </p>
       </div>
     </div>
   </section>
 
-  <!-- Why not X -->
-  <section class="section" style="background: var(--surface);">
+  <!-- ── Wow moment ── -->
+  <section class="section wow-section">
     <div class="section-inner">
-      <h2 class="section-title">Why existing tools fail</h2>
-      <p class="section-subtitle">Everyone solves one piece. Nobody connects them all.</p>
+      <div class="section-label">✦ The moment it clicks</div>
+      <h2 class="section-title">This is the moment that creates retention</h2>
+      <p class="section-subtitle"></p>
+      <div class="wow-card">
+        <ul class="wow-timeline">
+          <li>
+            <span class="day">Tuesday</span>
+            You save a Stratechery article on AI commoditization while browsing.
+          </li>
+          <li>
+            <span class="day">Wednesday</span>
+            You highlight a Twitter thread about GPU pricing trends.
+          </li>
+          <li>
+            <span class="day">Friday</span>
+            You ask Claude: <em>"Help me draft a board update on our AI strategy."</em>
+          </li>
+          <li>
+            <span class="day">Friday — 2 seconds later</span>
+            Claude responds citing the Stratechery thesis and GPU pricing data. You never mentioned either. Cache silently retrieved and injected them.
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
 
-      <div class="compare-grid">
-        <div class="compare-card">
-          <h3>Readwise / Pocket</h3>
-          <span class="tag tag-them">Reading tool, not AI layer</span>
-          <p>Great for saving and highlighting. But your highlights never reach ChatGPT or Claude. Save and forget.</p>
+  <!-- ── Integrations ── -->
+  <section class="section">
+    <div class="section-inner">
+      <div class="section-label">Works everywhere</div>
+      <h2 class="section-title">One vault. Every AI.</h2>
+      <p class="section-subtitle">Cache is vendor-neutral. Save from anywhere, inject into any AI via MCP.</p>
+      <div class="integrations-row">
+        <div class="integration">
+          <div class="integration-icon">🌐</div>
+          Chrome
         </div>
-        <div class="compare-card">
-          <h3>ChatGPT Memory</h3>
-          <span class="tag tag-them">Siloed to one platform</span>
-          <p>ChatGPT remembers your chats — but knows nothing about what you read on the web, and none of it transfers to Claude or Cursor.</p>
+        <div class="integration">
+          <div class="integration-icon">💬</div>
+          ChatGPT
         </div>
-        <div class="compare-card">
-          <h3>Notion AI / Mem.ai</h3>
-          <span class="tag tag-them">Requires manual organization</span>
-          <p>You have to dump, tag, and structure everything yourself. Most people's Notion is a graveyard of unsorted pages.</p>
+        <div class="integration">
+          <div class="integration-icon">🤖</div>
+          Claude
         </div>
-        <div class="compare-card">
-          <h3>Cache</h3>
-          <span class="tag tag-us">Capture → Retrieve → Inject</span>
-          <p>Vendor-neutral. Capture from any source. Auto-retrieve when relevant. Inject into any AI. No manual work.</p>
+        <div class="integration">
+          <div class="integration-icon">⌨️</div>
+          Cursor
+        </div>
+        <div class="integration">
+          <div class="integration-icon">🔌</div>
+          MCP
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Waitlist CTA -->
-  <section class="cta-section" id="waitlist">
-    <h2>Stop losing what you read.</h2>
-    <p>Join the waitlist for early access to Cache.</p>
-    <a class="hero-cta" href="mailto:akshay.ratnawat@gmail.com?subject=Cache%20Waitlist&body=I%20want%20early%20access%20to%20Cache!">Request Early Access →</a>
-    <p class="hero-sub" style="margin-top: 1rem;">Or email us: akshay.ratnawat@gmail.com</p>
+  <!-- ── Comparison ── -->
+  <section class="section compare-section" id="compare">
+    <div class="section-inner">
+      <div class="section-label">Why Cache</div>
+      <h2 class="section-title">Everyone solves one piece.<br>Nobody connects them all.</h2>
+      <p class="section-subtitle"></p>
+      <div class="compare-table">
+        <div class="compare-row header">
+          <div class="compare-cell"></div>
+          <div class="compare-cell">Save from web</div>
+          <div class="compare-cell">Auto-inject into AI</div>
+          <div class="compare-cell">Vendor-neutral</div>
+          <div class="compare-cell">Open source</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-cell">Readwise</div>
+          <div class="compare-cell"><span class="check">✓</span></div>
+          <div class="compare-cell"><span class="cross">✗</span></div>
+          <div class="compare-cell"><span class="cross">✗</span></div>
+          <div class="compare-cell"><span class="cross">✗</span></div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-cell">ChatGPT Memory</div>
+          <div class="compare-cell"><span class="cross">✗</span></div>
+          <div class="compare-cell"><span class="check">✓</span></div>
+          <div class="compare-cell"><span class="cross">✗</span></div>
+          <div class="compare-cell"><span class="cross">✗</span></div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-cell">Notion AI</div>
+          <div class="compare-cell"><span class="cross">✗</span></div>
+          <div class="compare-cell"><span class="cross">✗</span></div>
+          <div class="compare-cell"><span class="cross">✗</span></div>
+          <div class="compare-cell"><span class="cross">✗</span></div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-cell">Mem0</div>
+          <div class="compare-cell"><span class="cross">✗</span></div>
+          <div class="compare-cell"><span class="check">✓</span></div>
+          <div class="compare-cell"><span class="check">✓</span></div>
+          <div class="compare-cell"><span class="check">✓</span></div>
+        </div>
+        <div class="compare-row highlight">
+          <div class="compare-cell">Cache</div>
+          <div class="compare-cell"><span class="check">✓</span></div>
+          <div class="compare-cell"><span class="check">✓</span></div>
+          <div class="compare-cell"><span class="check">✓</span></div>
+          <div class="compare-cell"><span class="check">✓</span></div>
+        </div>
+      </div>
+    </div>
   </section>
 
+  <!-- ── Open Source ── -->
+  <section class="section">
+    <div class="section-inner">
+      <div class="oss-card">
+        <h3>Open source. Self-hostable. Yours.</h3>
+        <p>
+          Cache is AGPL-3.0 licensed. Run it on our cloud or self-host with Docker + Ollama for fully local embeddings.
+          Your saved content never leaves your infrastructure if you don't want it to.
+        </p>
+        <div class="oss-badges">
+          <a class="oss-badge" href="https://github.com/CacheMind" target="_blank">
+            ⭐ GitHub
+          </a>
+          <span class="oss-badge">🐳 Docker Ready</span>
+          <span class="oss-badge">🔐 Self-host</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA ── -->
+  <section class="cta-section" id="waitlist">
+    <div class="cta-inner">
+      <h2>Stop losing what you read.</h2>
+      <p>Join the waitlist. Be first to try Cache.</p>
+      <div class="hero-buttons">
+        <a class="btn-primary" href="https://github.com/CacheMind" target="_blank">
+          Request Early Access →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
   <footer>
-    <p>© 2026 Cache · Built by <a href="https://github.com/akshayratnawat" style="color: var(--accent); text-decoration: none;">Akshay Ratnawat</a></p>
+    <p>© 2026 CacheMind · <a href="https://github.com/CacheMind">GitHub</a> · Built in India 🇮🇳</p>
   </footer>
 
 </body>
